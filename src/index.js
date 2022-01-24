@@ -1,42 +1,24 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom";
+import { initiateStore } from "./store/store";
+import * as actions from "./store/actions";
 
-function taskReducer(state, action) {
-  switch (action.type) {
-    case "task/completed":
-      const newArray = [...state];
-      const elementIndex = newArray.findIndex(
-        (el) => el.id === action.payload.id
-      );
-      newArray[elementIndex].completed = true;
-      return newArray;
-
-    default:
-      break;
-  }
-}
-
-function createStore(reducer, initialState) {
-  let state = initialState;
-  function getState() {
-    return state;
-  }
-  function dispatch(action) {
-    state = reducer(state, action);
-  }
-  return { getState, dispatch };
-}
-const store = createStore(taskReducer, [
-  { id: 1, description: "Task 1", completed: false },
-  { id: 2, description: "Task 2", completed: false },
-]);
+const store = initiateStore();
 
 const App = (params) => {
-  console.log(store.getState());
-  const state = store.getState();
+  const [state, setSate] = useState(store.getState());
+
+  useEffect(() => {
+    store.subscribe(() => {
+      setSate(store.getState);
+    });
+  }, []);
+
   const completeTask = (taskId) => {
-    store.dispatch({ type: "task/completed", payload: { id: taskId } });
-    console.log(store.getState());
+    store.dispatch(actions.taskComplete(taskId));
+  };
+  const changeTitle = (taskId) => {
+    store.dispatch(actions.titleChanged(taskId));
   };
   return (
     <>
@@ -44,9 +26,10 @@ const App = (params) => {
       <ul>
         {state.map((el) => (
           <li key={el.id}>
-            <p>{el.description}</p>
+            <p>{el.title}</p>
             <p>{`completed:${el.completed}`}</p>
             <button onClick={() => completeTask(el.id)}>Completed</button>
+            <button onClick={() => changeTitle(el.id)}>Change Title </button>
             <hr />
           </li>
         ))}
